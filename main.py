@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from routes import user, task
-# import models.model
+from models import model
 from db.config_db import engine
 
-# models.model.Base.metadata.create_all(bind=engine)
+model.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 

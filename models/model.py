@@ -9,7 +9,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
 
-    task = relationship("Task", back_populates="owner", useList=False)
+    task = relationship("Task", back_populates="owner")
 
 
 class Task(Base):
