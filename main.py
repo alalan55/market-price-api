@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 from routes import user, task
-# from models import model
 from db.config_db import engine
-# from models import user_model
 from db.models import user_model, task_model
 
 # user_model.Base.metadata.create_all(bind=engine)
