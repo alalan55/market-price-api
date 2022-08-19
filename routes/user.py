@@ -1,5 +1,5 @@
 import fastapi
-from models.IUser import User
+from interface.IUser import User
 
 router = fastapi.APIRouter()
 

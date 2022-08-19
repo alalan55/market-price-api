@@ -1,6 +1,6 @@
 import fastapi
 
-from models.ITask import Task
+from interface.ITask import Task
 
 router = fastapi.APIRouter()
 
