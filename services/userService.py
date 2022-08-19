@@ -1,4 +1,3 @@
-from unicodedata import name
 from sqlalchemy.orm import Session
 from models.model import User
 from ..schemas.schemas import UserSchema
