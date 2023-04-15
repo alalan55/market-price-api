@@ -18,14 +18,6 @@ ALGOTIGHTM = 'HS256'
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-
-class CreateUser(BaseModel):
-    name: str
-    email: str
-    password: str
-    profile_pic: Optional[str]
-
-
 class UserLogin(BaseModel):
     email: str
     password: str
@@ -69,20 +61,7 @@ def authenticate_user(email: str, password: str, db):
     return user
 
 
-@router.post("/user/create")
-async def create_user(user: CreateUser, db: Session = Depends(get_db)):
-    user_model = models.Users()
-    user_model.name = user.name
-    user_model.email = user.email
-    user_model.hashed_password = password_hash(user.password)
-
-    db.add(user_model)
-    db.commit()
-
-    return {'message': 'Usuário criado com sucesso!'}
-
-
-@router.post("/user/login")
+@router.post("/login")
 async def login(user: UserLogin, db: Session = Depends(get_db)):
     user = authenticate_user(user.email, user.password, db)
 
