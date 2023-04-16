@@ -77,7 +77,7 @@ async def get_product_by_id(id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{id}")
-async def update_product(id: str, product: ProductCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+async def update_product(id: int, product: ProductCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     if user is None:
         raise get_user_exception()
 
@@ -95,8 +95,24 @@ async def update_product(id: str, product: ProductCreate, db: Session = Depends(
     product_model.quantity = product.quantity
     product_model.type = product.type
 
-
     db.add(product_model)
     db.commit()
 
-    return success_response_dto(200, product, 'Produto atualizado com sucesso!' )
+    return success_response_dto(200, product, 'Produto atualizado com sucesso!')
+
+
+@router.delete("/{id}")
+async def delete_product(id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    if user is None:
+        raise get_user_exception()
+
+    product = db.query(models.Products).filter(
+        models.Products.id == id).first()
+
+    if product is None:
+        raise not_found_item_dto('Produto não encontrado')
+
+    db.query(models.Products).filter(models.Products.id == id).delete()
+    db.commit()
+
+    return success_response_dto(200, None, 'Produto apagado com sucesso!')
