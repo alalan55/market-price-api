@@ -41,7 +41,7 @@ async def get_all_products(db: Session = Depends(get_db), user: dict = Depends(g
     return success_response_dto(200, product_model)
 
 
-@router.post("/create")
+@router.post("/")
 async def create_product(product: ProductCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     if user is None:
         raise get_user_exception()
@@ -74,3 +74,29 @@ async def get_product_by_id(id: int, db: Session = Depends(get_db)):
         raise not_found_item_dto('Produto não encontrado')
 
     return success_response_dto(200, product, "Sucesso!")
+
+
+@router.put("/{id}")
+async def update_product(id: str, product: ProductCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    if user is None:
+        raise get_user_exception()
+
+    product_model = db.query(models.Products).filter(
+        models.Products.id == id).first()
+
+    if product_model is None:
+        raise not_found_item_dto("Produto não encontrado")
+
+    product_model.name = product.name
+    product_model.price = product.price
+    product_model.buy_date = product.buy_date
+    product_model.buy_month = product.buy_month
+    product_model.buy_year = product.buy_year
+    product_model.quantity = product.quantity
+    product_model.type = product.type
+
+
+    db.add(product_model)
+    db.commit()
+
+    return success_response_dto(200, product, 'Produto atualizado com sucesso!' )
