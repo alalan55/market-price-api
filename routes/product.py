@@ -4,7 +4,7 @@ from typing import Optional
 from database import SessionLocal
 from sqlalchemy.orm import Session
 from routes.auth import get_current_user, get_user_exception
-from dtos.responses_dto import success_response_model
+from dtos.responses_dto import success_response_dto, not_found_item_dto
 import models
 
 
@@ -38,7 +38,7 @@ async def get_all_products(db: Session = Depends(get_db), user: dict = Depends(g
     product_model = db.query(models.Products).filter(
         models.Products.owner_id == user.get("id")).all()
 
-    return success_response_model(200, product_model)
+    return success_response_dto(200, product_model)
 
 
 @router.post("/create")
@@ -59,4 +59,18 @@ async def create_product(product: ProductCreate, db: Session = Depends(get_db), 
     db.add(product_model)
     db.commit()
 
-    return success_response_model(201, product, "Produto criado com sucesso!")
+    return success_response_dto(201, product, "Produto criado com sucesso!")
+
+
+@router.get("/{id}")
+async def get_product_by_id(id: int, db: Session = Depends(get_db)):
+    # if user is None:
+    #     raise get_user_exception()
+
+    product = db.query(models.Products).filter(
+        models.Products.id == id).first()
+
+    if product is None:
+        raise not_found_item_dto('Produto não encontrado')
+
+    return success_response_dto(200, product, "Sucesso!")
