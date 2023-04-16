@@ -5,3 +5,4 @@ psycopg2
 python-dotenv
 autopep8
 passlib[bcrypt]
+python-jose[cryptography]
