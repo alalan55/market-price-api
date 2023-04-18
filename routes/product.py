@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 from database import SessionLocal
 from sqlalchemy.orm import Session
+import functools
 from routes.auth import get_current_user, get_user_exception
 from dtos.responses_dto import success_response_dto, not_found_item_dto
 import models
@@ -15,8 +17,8 @@ class ProductCreate(BaseModel):
     name: str
     price: float
     buy_date: str
-    buy_month: str
-    buy_year: str
+    buy_month: int
+    buy_year: int
     quantity: int
     type: int
     owner_id: int
@@ -28,6 +30,38 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+@router.get('/accountants')
+async def get_products_accountants(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    if user is None:
+        raise get_user_exception()
+
+    total_price = 0
+    total_price_for_month = 0
+    total_products_registered = 0
+
+    actual_month = int(datetime.now().strftime('%m'))
+
+    found = db.query(models.Products).filter(
+        models.Products.owner_id == user.get('id')).all()
+
+    month_found = db.query(models.Products).filter(models.Products.owner_id == user.get(
+        'id')).filter(models.Products.buy_month == actual_month).all()
+
+    for product in found:
+        total_price += product.price
+
+    for product in month_found:
+        total_price_for_month += product.price
+
+    total_products_registered = len(found)
+    
+    obj = {'total_prices': total_price,
+           'total_month_prices': total_price_for_month, 
+           'total_products_registered': total_products_registered}
+
+    return success_response_dto(200, obj, 'Sucesso')
 
 
 @router.get("/")
@@ -45,6 +79,11 @@ async def get_all_products(db: Session = Depends(get_db), user: dict = Depends(g
 async def create_product(product: ProductCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     if user is None:
         raise get_user_exception()
+
+    # print(product.buy_date)
+    # parsed_date = datetime.strptime(product.buy_date, "%d-%m-%Y")
+    # parsed_date_2 = datetime.strftime(parsed_date, '%d-%m-%Y')
+    # print(type(parsed_date_2))
 
     product_model = models.Products()
     product_model.name = product.name
