@@ -77,6 +77,16 @@ async def get_products_for_actual_year(db: Session = Depends(get_db), user: dict
     return success_response_dto(200, products, 'Sucesso!')
 
 
+@router.get('/year/{year}')
+async def get_products_by_year(year: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    if user is None:
+        raise get_user_exception()
+
+    products = db.query(models.Products).filter(models.Products.owner_id == user.get(
+        'id')).filter(models.Products.buy_year == year).all()
+
+    return success_response_dto(200, products, 'Sucesso!')
+
 @router.get("/")
 async def get_all_products(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     if not user or user is None:
