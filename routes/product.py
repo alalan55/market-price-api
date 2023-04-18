@@ -56,12 +56,25 @@ async def get_products_accountants(db: Session = Depends(get_db), user: dict = D
         total_price_for_month += product.price
 
     total_products_registered = len(found)
-    
+
     obj = {'total_prices': total_price,
-           'total_month_prices': total_price_for_month, 
+           'total_month_prices': total_price_for_month,
            'total_products_registered': total_products_registered}
 
     return success_response_dto(200, obj, 'Sucesso')
+
+
+@router.get('/actual-year')
+async def get_products_for_actual_year(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    if user is None:
+        raise get_user_exception()
+
+    actual_year = int(datetime.now().strftime('%Y'))
+
+    products = db.query(models.Products).filter(models.Products.buy_year == actual_year).filter(
+        models.Products.owner_id == user.get('id')).all()
+
+    return success_response_dto(200, products, 'Sucesso!')
 
 
 @router.get("/")
