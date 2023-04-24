@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from database import SessionLocal
 from sqlalchemy.orm import Session
@@ -17,6 +18,7 @@ SECRET_KEY = "KlgH6AzYDeZeGwD288to79I3vTHT8wp7"
 ALGOTIGHTM = 'HS256'
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="token")
 
 class UserLogin(BaseModel):
     email: str
@@ -30,6 +32,18 @@ def get_db():
     finally:
         db.close()
 
+
+def get_current_user(token: str = Depends(oauth2_bearer)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGOTIGHTM])
+        email: str = payload.get("sub")
+        id: int = payload.get("id")
+
+        if email is None or id is None:
+            raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        return {"email": email, "id":id}
+    except JWTError:
+        raise HTTPException(status_code=404, detail="Nâo foi possível validar as suas credenciais")
 
 def create_access_token(email: str, id: int, expires_delta: Optional[timedelta] = None):
     encode = {"sub": email, "id": id}
@@ -89,3 +103,10 @@ def successful_response(status_code: int, token: Optional[str] = None, content: 
         "content": content,
         "token": token
     }
+
+
+
+def get_user_exception():
+    credential_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Não foi possível validar as credenciais", headers={"WWW-Authenticate": "Bearer"})
+    return credential_exception
