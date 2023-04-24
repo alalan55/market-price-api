@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -21,7 +21,7 @@ class Products(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     price = Column(Float)
-    buy_date = Column(String)
+    buy_date = Column(DateTime)
     buy_month = Column(Integer)
     buy_year = Column(Integer)
     quantity = Column(Integer)

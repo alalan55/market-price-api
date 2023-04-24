@@ -33,12 +33,26 @@ def get_db():
 
 
 @router.get("/")
-async def get_all_products(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+async def get_all_products(start_date: str = None, end_date: str = None, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     if not user or user is None:
         raise get_user_exception()
 
-    product_model = db.query(models.Products).filter(
-        models.Products.owner_id == user.get("id")).all()
+    product_model = None
+
+    if start_date and end_date:
+        product_model = db.query(models.Products).filter(
+            models.Products.buy_date >= datetime.strptime(start_date, "%d-%m-%Y")).filter(models.Products.buy_date <= datetime.strptime(end_date, "%d-%m-%Y")).all()
+
+    elif start_date and not end_date:
+        product_model = db.query(models.Products).filter(
+            models.Products.buy_date >= datetime.strptime(start_date, "%d-%m-%Y")).all()
+
+    elif end_date and not start_date:
+        product_model = db.query(models.Products).filter(
+            models.Products.buy_date <= datetime.strptime(end_date, "%d-%m-%Y")).all()
+    else:
+        product_model = db.query(models.Products).filter(
+            models.Products.owner_id == user.get("id")).all()
 
     return success_response_dto(200, product_model)
 
@@ -48,15 +62,10 @@ async def create_product(product: ProductCreate, db: Session = Depends(get_db), 
     if user is None:
         raise get_user_exception()
 
-    # print(product.buy_date)
-    # parsed_date = datetime.strptime(product.buy_date, "%d-%m-%Y")
-    # parsed_date_2 = datetime.strftime(parsed_date, '%d-%m-%Y')
-    # print(type(parsed_date_2))
-
     product_model = models.Products()
     product_model.name = product.name
     product_model.price = product.price
-    product_model.buy_date = product.buy_date
+    product_model.buy_date = datetime.strptime(product.buy_date, "%d-%m-%Y")
     product_model.buy_month = product.buy_month
     product_model.buy_year = product.buy_year
     product_model.quantity = product.quantity
@@ -67,7 +76,6 @@ async def create_product(product: ProductCreate, db: Session = Depends(get_db), 
     db.commit()
 
     return success_response_dto(201, product, "Produto criado com sucesso!")
-
 
 
 @router.get('/accountants')
