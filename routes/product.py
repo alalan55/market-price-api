@@ -32,6 +32,44 @@ def get_db():
         db.close()
 
 
+@router.get("/")
+async def get_all_products(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    if not user or user is None:
+        raise get_user_exception()
+
+    product_model = db.query(models.Products).filter(
+        models.Products.owner_id == user.get("id")).all()
+
+    return success_response_dto(200, product_model)
+
+
+@router.post("/")
+async def create_product(product: ProductCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    if user is None:
+        raise get_user_exception()
+
+    # print(product.buy_date)
+    # parsed_date = datetime.strptime(product.buy_date, "%d-%m-%Y")
+    # parsed_date_2 = datetime.strftime(parsed_date, '%d-%m-%Y')
+    # print(type(parsed_date_2))
+
+    product_model = models.Products()
+    product_model.name = product.name
+    product_model.price = product.price
+    product_model.buy_date = product.buy_date
+    product_model.buy_month = product.buy_month
+    product_model.buy_year = product.buy_year
+    product_model.quantity = product.quantity
+    product_model.type = product.type
+    product_model.owner_id = user.get("id")
+
+    db.add(product_model)
+    db.commit()
+
+    return success_response_dto(201, product, "Produto criado com sucesso!")
+
+
+
 @router.get('/accountants')
 async def get_products_accountants(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     if user is None:
@@ -86,42 +124,6 @@ async def get_products_by_year(year: int, db: Session = Depends(get_db), user: d
         'id')).filter(models.Products.buy_year == year).all()
 
     return success_response_dto(200, products, 'Sucesso!')
-
-@router.get("/")
-async def get_all_products(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if not user or user is None:
-        raise get_user_exception()
-
-    product_model = db.query(models.Products).filter(
-        models.Products.owner_id == user.get("id")).all()
-
-    return success_response_dto(200, product_model)
-
-
-@router.post("/")
-async def create_product(product: ProductCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    if user is None:
-        raise get_user_exception()
-
-    # print(product.buy_date)
-    # parsed_date = datetime.strptime(product.buy_date, "%d-%m-%Y")
-    # parsed_date_2 = datetime.strftime(parsed_date, '%d-%m-%Y')
-    # print(type(parsed_date_2))
-
-    product_model = models.Products()
-    product_model.name = product.name
-    product_model.price = product.price
-    product_model.buy_date = product.buy_date
-    product_model.buy_month = product.buy_month
-    product_model.buy_year = product.buy_year
-    product_model.quantity = product.quantity
-    product_model.type = product.type
-    product_model.owner_id = user.get("id")
-
-    db.add(product_model)
-    db.commit()
-
-    return success_response_dto(201, product, "Produto criado com sucesso!")
 
 
 @router.get("/{id}")
